@@ -6,226 +6,253 @@
 //      children: []
 //}
 
-function updateStructure(rec1,rec2){
-	function isNum(value) {
-  return parseInt(value, 10);
+function intValue(str) {
+  return parseInt(str.substring(0, str.length - 2));
 }
-
-function copyProperties(src, target, obj) {
-  for (const key in src) {
-    if (key == "children" || key == "width" || key == "height") {
-      target[key] = obj[key];
-    } else {
-      target[key] = Math.abs(src[key]).toString() + "px";
-    }
-  }
+function transform(obj) {
+  var t = Object.keys(obj);
+  var retOb = { children: [] }
+  retOb[t[0]] = intValue(obj[t[0]]);
+  retOb[t[1]] = intValue(obj[t[1]]);
+  retOb[t[2]] = intValue(obj[t[2]]);
+  retOb[t[3]] = intValue(obj[t[3]]);
+  return retOb;
 }
-function updateStructure(recA, recB) {
-  console.log(
-    "------------------------------------------------------------------------called now------------------------------------------------------------------------"
-  );
-  console.log(recA);
-  console.log(recB);
-  //write your code
-  var delta = {}; //map
-  for (const key in recA) {
-    if (key == "children") {
-      delta[key] = recA[key];
-    } else {
-      delta[key] = isNum(recA[key]) - isNum(recB[key]);
-    }
-  }
-  // console.log(delta);
-  // If height & width exists
-  const children = {};
-  if (recA.height && recA.width) {
-    console.log("height & width exists");
-    if (delta.height >= 0 && delta.width >= 0) {
-      //A is bigger
-      console.log("A is bigger");
-      if (recA.top && recA.left) {
-        // If top & left exists
+function check(rec1, rec2) {
+  var retRec1 = rec1;
+  var retRec2 = rec2;
+  rec1 = transform(rec1);
+  rec2 = transform(rec2);
+  console.log(rec1, rec2);
+  var keysRec1 = Object.keys(rec1);
+  if (keysRec1.indexOf('top') !== -1) {
+    if (keysRec1.indexOf('left') !== -1) {
+      if (keysRec1.indexOf('bottom') !== -1) {
+        // case when rec1 is inside rec2
+        if (rec1.top >= rec2.top) {
+          if (rec1.bottom >= rec2.bottom) {
+            if (rec1.left >= rec2.left) {
+              if (rec1.right >= rec2.right) {
+                let a = retRec2;
+                a.children.push(
+                  {
+                    top: (rec1.top - rec2.top) + "px",
+                    left: ((rec1.left) - (rec2.left)) + "px",
+                    bottom: ((rec1.bottom) - (rec2.bottom)) + "px",
+                    right: ((rec1.right) - (rec2.right)) + "px",
+                    children: []
+                  }
+                );
+                return a;
+              }
+            }
+          }
+        }
+        // case when rec2 is inside rec1
+        if (rec1.top <= rec2.top) {
+          if (rec1.bottom <= rec2.bottom) {
+            if (rec1.left <= rec2.left) {
+              if (rec1.right <= rec2.right) {
+                let a = retRec1;
+                a.children.push(
+                  {
+                    top: (rec2.top - rec1.top) + "px",
+                    left: ((rec2.left) - (rec1.left)) + "px",
+                    bottom: ((rec2.bottom) - (rec1.bottom)) + "px",
+                    right: ((rec2.right) - (rec1.right)) + "px",
+                    children: []
+                  }
+                );
+                return a;
+              }
+            }
+          }
+        }
+        return retRec1;
+      }
+      else {
+        // when rec1 is inside rec2
+        if (rec1.top >= rec2.top) {
+          if (rec1.left >= rec2.left) {
+            if ((rec1.top + rec1.height) <= (rec2.top + rec2.height)) {
+              if ((rec1.left + rec1.width) <= (rec2.left + rec2.width)) {
+                var a = retRec2;
+                a.children.push(
+                  {
+                    top: (rec1.top - rec2.top) + "px",
+                    left: (rec1.left - rec2.left) + "px",
+                    height: rec1.height + "px",
+                    width: rec1.width + "px",
+                    children: []
+                  }
+                )
+                return a;
+              }
+            }
+          }
+        }
+        // when rec2 is inside rec1
+        if (rec2.top >= rec1.top) {
+          if (rec2.left >= rec1.left) {
+            if ((rec2.top + rec2.height) <= (rec1.top + rec1.height)) {
+              if ((rec2.left + rec2.width) <= (rec1.left + rec1.width)) {
+                var a = retRec1;
+                a.children.push(
+                  {
+                    top: (rec2.top - rec1.top) + "px",
+                    left: (rec2.left - rec1.left) + "px",
+                    height: rec2.height + "px",
+                    width: rec2.width + "px",
+                    children: []
+                  }
+                )
+                return a;
+              }
+            }
+          }
+        }
+        
+      return retRec1;
+      }
 
-        console.log("top & left exists");
-        if (delta.top <= 0 && delta.left <= 0) {
-          console.log("contained by A");
-          copyProperties(delta, children, recB);
-          return {
-            top: recA.top,
-            left: recA.left,
-            height: recA.height,
-            width: recA.width,
-            children: [children],
-          };
-        } else {
-          console.log("No one contains each other");
-          return recA;
-        }
-      } else if (recA.bottom && recA.right) {
-        console.log("bottom & right exists");
-        if (delta.bottom <= 0 && delta.right <= 0) {
-          console.log("contained by A");
-          copyProperties(delta, children, recB);
-          return {
-            bottom: recA.bottom,
-            right: recA.right,
-            height: recA.height,
-            width: recA.width,
-            children: [children],
-          };
-        } else {
-          console.log("No one contains each other");
-          return recA;
-        }
-      } else if (recA.top && recA.right) {
-        console.log("top & right exists");
-        if (delta.top <= 0 && delta.right <= 0) {
-          console.log("contained by A");
-          copyProperties(delta, children, recB);
-          return {
-            top: recA.top,
-            right: recA.right,
-            height: recA.height,
-            width: recA.width,
-            children: [children],
-          };
-        } else {
-          console.log("No one contains each other");
-          return recA;
-        }
-      } else if (recA.bottom && recA.left) {
-        console.log("bottom & left exists");
-        if (delta.bottom <= 0 && delta.left <= 0) {
-          console.log("contained by A");
-          copyProperties(delta, children, recB);
-          return {
-            bottom: recA.bottom,
-            left: recA.left,
-            height: recA.height,
-            width: recA.width,
-            children: [children],
-          };
-        } else {
-          console.log("No one contains each other");
-          return recA;
+    }
+    if (keysRec1.indexOf('right') !== -1) {
+      // when rec1 is inside rec2
+      if (rec1.top >= rec2.top) {
+        if (rec1.right >= rec2.right) {
+          if ((rec1.top + rec1.height) <= (rec2.top + rec2.height)) {
+            if ((rec1.right + rec1.width) <= (rec2.right + rec2.width)) {
+              var a = retRec2;
+
+              a.children.push(
+                {
+                  top: (rec1.top - rec2.top) + "px",
+                  right: (rec1.right - rec2.right) + "px",
+                  height: rec1.height + "px",
+                  width: rec1.width + "px",
+                  children: []
+                }
+              )
+              return a;
+            }
+          }
         }
       }
-    } else if (delta.height < 0 && delta.width < 0) {
-      //B is bigger
-      console.log(" B is bigger");
-      if (recA.top && recA.left) {
-        // If top & left exists
+      // when rec2 is inside rec1
+      if (rec2.top >= rec1.top) {
+        if (rec2.right >= rec1.right) {
+          if ((rec2.top + rec2.height) <= (rec1.top + rec1.height)) {
+            if ((rec2.right + rec2.width) <= (rec1.right + rec1.width)) {
+              var a = retRec1;
 
-        console.log("top & left exists");
-        if (delta.top >= 0 && delta.left >= 0) {
-          console.log("contained by B");
-          copyProperties(delta, children, recA);
-          return {
-            top: recB.top,
-            left: recB.left,
-            height: recB.height,
-            width: recB.width,
-            children: [children],
-          };
-        } else {
-          console.log("No one contains each other");
-          return recA;
-        }
-      } else if (recA.bottom && recA.right) {
-        console.log("bottom & right exists");
-        if (delta.bottom >= 0 && delta.right >= 0) {
-          console.log("contained by B");
-          copyProperties(delta, children, recA);
-          return {
-            bottom: recB.bottom,
-            right: recB.right,
-            height: recB.height,
-            width: recB.width,
-            children: [children],
-          };
-        } else {
-          console.log("No one contains each other");
-          return recA;
-        }
-      } else if (recA.top && recA.right) {
-        console.log("top & right exists");
-        if (delta.top >= 0 && delta.right >= 0) {
-          console.log("contained by B");
-          copyProperties(delta, children, recA);
-          return {
-            top: recB.top,
-            right: recB.right,
-            height: recB.height,
-            width: recB.width,
-            children: [children],
-          };
-        } else {
-          console.log("No one contains each other");
-          return recA;
-        }
-      } else if (recA.bottom && recA.left) {
-        console.log("bottom & left exists");
-        if (delta.bottom >= 0 && delta.left >= 0) {
-          console.log("contained by B");
-          copyProperties(delta, children, recA);
-          return {
-            bottom: recB.bottom,
-            left: recB.left,
-            height: recB.height,
-            width: recB.width,
-            children: [children],
-          };
-        } else {
-          console.log("No one contains each other");
-          return recA;
+              a.children.push(
+                {
+                  top: (rec2.top - rec1.top) + "px",
+                  right: (rec2.right - rec1.right) + "px",
+                  height: rec2.height + "px",
+                  width: rec2.width + "px",
+                  children: []
+                }
+              )
+              return a;
+            }
+          }
         }
       }
-    } else {
-      // no one contains each other
-      console.log("no one contains each other");
-      return recA;
+      
+    return retRec1;
     }
-  } else {
-    console.log("t, r, b, l exists");
-    if (
-      delta.top > 0 &&
-      delta.right > 0 &&
-      delta.left > 0 &&
-      delta.bottom > 0
-    ) {
-      console.log("Contained by B");
-      copyProperties(delta, children, recA);
-      return {
-        top: recB.top,
-        left: recB.left,
-        bottom: recB.bottom,
-        right: recB.right,
-        children: [children],
-      };
-    } else if (
-      delta.top <= 0 &&
-      delta.right <= 0 &&
-      delta.left <= 0 &&
-      delta.bottom <= 0
-    ) {
-      console.log("contained by A");
-      copyProperties(delta, children, recB);
-      return {
-        top: recA.top,
-        left: recA.left,
-        bottom: recA.bottom,
-        right: recA.right,
-        children: [children],
-      };
-    } else {
-      console.log("No one contains each other");
-      return recA;
+
+  }
+  if (keysRec1.indexOf('bottom') !== -1) {
+    if (keysRec1.indexOf('left') !== -1) {
+      // when rec1 is inside rec2
+      if (rec1.bottom >= rec2.bottom) {
+        if (rec1.left >= rec2.left) {
+          if ((rec1.bottom + rec1.height) <= (rec2.bottom + rec2.height)) {
+            if ((rec1.left + rec1.width) <= (rec2.left + rec2.width)) {
+              var a = retRec2;
+              a.children.push(
+                {
+                  bottom: (rec1.bottom - rec2.bottom) + "px",
+                  left: (rec1.left - rec2.left) + "px",
+                  height: rec1.height + "px",
+                  width: rec1.width + "px",
+                  children: []
+                }
+              )
+              return a;
+            }
+          }
+        }
+      }
+      // when rec2 is inside rec1
+      if (rec2.bottom >= rec1.bottom) {
+        if (rec2.left >= rec1.left) {
+          if ((rec2.bottom + rec2.height) <= (rec1.bottom + rec1.height)) {
+            if ((rec2.left + rec2.width) <= (rec1.left + rec1.width)) {
+              var a = retRec1;
+              a.children.push(
+                {
+                  bottom: (rec2.bottom - rec1.bottom) + "px",
+                  left: (rec2.left - rec1.left) + "px",
+                  height: rec2.height + "px",
+                  width: rec2.width + "px",
+                  children: []
+                }
+              )
+              return a;
+            }
+          }
+        }
+        return retRec1;
+      }
+
+      return retRec1;
+    }
+    if (keysRec1.indexOf('right')) {
+      // when rec1 is inside rec2
+      if (rec1.bottom >= rec2.bottom) {
+        if (rec1.right >= rec2.right) {
+          if ((rec1.bottom + rec1.height) <= (rec2.bottom + rec2.height)) {
+            if ((rec1.right + rec1.width) <= (rec2.right + rec2.width)) {
+              var a = retRec2;
+              a.children.push(
+                {
+                  bottom: (rec1.bottom - rec2.bottom) + "px",
+                  right: (rec1.right - rec2.right) + "px",
+                  height: rec1.height + "px",
+                  width: rec1.width + "px",
+                  children: []
+                }
+              )
+              return a;
+            }
+          }
+        }
+      }
+      // when rec2 is inside rec1
+      if (rec2.bottom >= rec1.bottom) {
+        if (rec2.right >= rec1.right) {
+          if ((rec2.bottom + rec2.height) <= (rec1.bottom + rec1.height)) {
+            if ((rec2.right + rec2.width) <= (rec1.right + rec1.width)) {
+              var a = retRec1;
+              a.children.push(
+                {
+                  bottom: (rec2.bottom - rec1.bottom) + "px",
+                  right: (rec2.right - rec1.right) + "px",
+                  height: rec2.height + "px",
+                  width: rec2.width + "px",
+                  children: []
+                }
+              )
+              return a;
+            }
+          }
+        }
+      }
+      return retRec1;
     }
   }
 }
-
-
-
-
-
-module.exports = updateStructure;
+module.exports = check
